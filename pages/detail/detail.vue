@@ -1,7 +1,7 @@
 <template>
 	<view class="detail">
 		<view class="nav-top">
-			<view class="go-back">
+			<view class="go-back" @click="goBack">
 				<image src="../../static/home_active.png" mode=""></image>
 				<text>返回</text>
 			</view>
@@ -31,9 +31,9 @@
 			<view class="choose-count">
 				<view class="choose-text">选择数量</view>
 				<view class="btn-box">
-					<image class="ruse" src="../../static/mun.png" mode=""></image>
-					<view class="num">1</view>
-					<image class="add" src="../../static/add.png" mode=""></image>
+					<image class="ruse" src="../../static/mun.png" mode="" @click="minus()"></image>
+					<view class="num">{{num}}</view>
+					<image class="add" src="../../static/add.png" mode="" @click="add"></image>
 				</view>
 			</view>
 			<view class="product-instr">
@@ -67,7 +67,8 @@
 			return {
 				
 				detailData: {},
-				typeData: []
+				typeData: [],
+				num:1
 				
 			}
 		},
@@ -78,6 +79,28 @@
 		},
 
 		methods: {
+			goBack(){
+				uni.navigateBack({
+					delta:1 //返回上一级
+				})
+			},
+			
+			add(){
+				this.num++
+			},
+			
+			minus(){
+				if(this.num == 1){
+					//提示信息
+					uni.showToast({
+						title:"不能再减了",
+						icon:"error"
+					})
+					return
+				}
+				this.num--
+			},
+			
 			changeIndex(index, count) {
 				this.typeData[index].index = count;
 				
@@ -169,7 +192,7 @@
 			margin: 0 20rpx;
 			//提高层级
 			position: relative;
-			z-index: 99999;
+			z-index: 100;
 			margin-top: -50rpx;
 
 			// height: 800rpx;
