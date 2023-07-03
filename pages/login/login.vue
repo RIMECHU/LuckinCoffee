@@ -6,7 +6,7 @@
 				<text>Luckin Coffee</text>
 			</view>
 
-			<view class="gohome" @click="">先逛一逛</view>
+			<view class="gohome" @click="toIndex">先逛一逛</view>
 		</view>
 
 		<view class="welcome-back">
@@ -90,6 +90,12 @@
 			}
 		},
 		methods: {
+			toIndex(){
+				uni.switchTab({
+					url:"/pages/index/index"
+				})
+			},
+			
 			login() {
 				console.log("this.loginData", this.loginData);
 				
@@ -127,6 +133,23 @@
 					},
 					success: (res) => {
 						console.log('res', res)
+						
+						if(res.data.code == 200){
+							uni.showToast({
+								title:"登录成功"
+							})
+							
+							uni.setStorageSync("token",res.data.token)
+							
+							uni.navigateBack({
+								delta:1
+							})
+						}else{
+							uni.showToast({
+								title:res.data.msg,
+								icon:"error"
+							})
+						}
 					},
 					fail: (err) => {
 						console.log('err', err)

@@ -55,7 +55,7 @@
 			</view>
 			<view class="footer-right">
 				<view class="add-car">加入购物袋</view>
-				<view class="go-buy">立即购买</view>
+				<view class="go-buy" @click="gobuy">立即购买</view>
 			</view>
 		</view>
 	</view>
@@ -65,11 +65,12 @@
 	export default {
 		data() {
 			return {
-				
+
 				detailData: {},
 				typeData: [],
-				num:1
-				
+				num: 1,
+
+				token: ""
 			}
 		},
 
@@ -78,34 +79,53 @@
 			this.getDetail(options.pid)
 		},
 
+		onShow() {
+			//获取token
+			this.token = uni.getStorageSync('token')
+
+		},
+
 		methods: {
-			goBack(){
-				uni.navigateBack({
-					delta:1 //返回上一级
+			gobuy(){
+				if(!this.token){
+					uni.navigateTo({
+						url:"/pages/login/login"
+					})
+					return
+				}
+				
+				uni.navigateTo({
+					url:"/pages/pay/pay"
 				})
 			},
 			
-			add(){
+			goBack() {
+				uni.navigateBack({
+					delta: 1 //返回上一级
+				})
+			},
+
+			add() {
 				this.num++
 			},
-			
-			minus(){
-				if(this.num == 1){
+
+			minus() {
+				if (this.num == 1) {
 					//提示信息
 					uni.showToast({
-						title:"不能再减了",
-						icon:"error"
+						title: "不能再减了",
+						icon: "error"
 					})
 					return
 				}
 				this.num--
 			},
-			
+
 			changeIndex(index, count) {
 				this.typeData[index].index = count;
-				
+
 				// console.log('this.detailData.typeData',this.detailData.typeData)
-				
+
 				// this.$set(this.detailData.typeData[index],'index',count)
 			},
 
@@ -119,28 +139,28 @@
 					success: (res) => {
 						console.log('res', res)
 						this.detailData = res.data.result[0]
-						console.log("this.detailData",this.detailData)
+						console.log("this.detailData", this.detailData)
 
 						res.data.result[0].desc = res.data.result[0].desc.split(/\n/)
-						
-						let typeAll = ['cream','milk','sugar','tem']
+
+						let typeAll = ['cream', 'milk', 'sugar', 'tem']
 						let typeData = []
-						typeAll.map(item=>{
+						typeAll.map(item => {
 							let obj = {}
 							obj.index = 0
-							obj.type = res.data.result[0][item+'_desc']
+							obj.type = res.data.result[0][item + '_desc']
 							obj.typeValue = res.data.result[0][item].split('/');
-							console.log('item',item)
-							
-							if(obj.typeValue[0].length!=0){
+							console.log('item', item)
+
+							if (obj.typeValue[0].length != 0) {
 								typeData.push(obj)
 							}
 						})
-						
-						console.log("typeData",typeData)
-						
+
+						console.log("typeData", typeData)
+
 						this.typeData = typeData;
-						
+
 						this.detailData = res.data.result[0]
 					},
 					fail: (err) => {
