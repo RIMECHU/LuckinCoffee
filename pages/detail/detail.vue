@@ -1,11 +1,12 @@
 <template>
 	<view class="detail">
 		<view class="nav-top">
-			<view class="go-back" @click="goBack">
-				<image src="../../static/home_active.png" mode=""></image>
+			<!-- <view class="go-back" @click="goBack"> -->
+				<!-- <image src="../../static/home_active.png" mode=""></image>
 				<text>返回</text>
 			</view>
-			<view class="product-title">商品详情</view>
+			<view class="product-title">商品详情</view> -->
+			<uni-nav-bar :border="false" left-icon="left" left-text="返回" @clickLeft="goBack"  :fixed="true" title="商品详情"></uni-nav-bar>
 		</view>
 
 		<view class="detail-img">
@@ -45,7 +46,7 @@
 		<view class="footer">
 			<view class="footer-left">
 				<view class="car">
-					<image src="../../static/menu_active.png" mode=""></image>
+					<image src="../../static/shopbag_active.png" mode=""></image>
 					<view>购物袋</view>
 				</view>
 				<view class="collect">
@@ -54,7 +55,7 @@
 				</view>
 			</view>
 			<view class="footer-right">
-				<view class="add-car">加入购物袋</view>
+				<view class="add-car" @click="addCar">加入购物袋</view>
 				<view class="go-buy" @click="gobuy">立即购买</view>
 			</view>
 		</view>
@@ -70,35 +71,86 @@
 				typeData: [],
 				num: 1,
 
-				token: ""
+				token: "",
+
+				pid: ""
 			}
 		},
 
 		onLoad(options) {
 			console.log("options", options)
 			this.getDetail(options.pid)
+			this.pid = options.pid
 		},
 
 		onShow() {
 			//获取token
 			this.token = uni.getStorageSync('token')
-
 		},
 
 		methods: {
-			gobuy(){
-				if(!this.token){
+			addCar(buy) {
+				let rule = ""
+				let ruleArr = this.typeData.map(item => {
+					return item.typeValue[item.index]
+				})
+				// console.log('ruleArr',ruleArr)
+				rule = ruleArr.join('/')
+				
+				// return
+				
+				uni.request({
+					url: "http://www.kangliuyong.com:10002/addShopcart",
+					method: "POST",
+					data: {
+						pid: this.pid,
+						count: this.num,
+						rule: rule,
+						appkey: 'U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=',
+						tokenString: this.token
+					},
+
+					header: {
+						'content-type': 'application/x-www-form-urlencoded;charset=utf-8' // 默认值
+					},
+					success: (res) => {
+						console.log("res", res)
+						
+						if(buy==true&&res.data.code==3000){
+							uni.navigateTo({
+								url: "/pages/pay/pay?sid="+ JSON.stringify([res.data.sid])
+							})
+							
+							return
+						}
+						
+						if(res.data.code==3000){
+							uni.showToast({
+								title:"加入购物车成功"
+							})
+						}
+					},
+					fail: (err) => {
+						console.log("err", err)
+					}
+				})
+			},
+
+			gobuy() {
+				if (!this.token) {
 					uni.navigateTo({
-						url:"/pages/login/login"
+						url: "/pages/login/login"
 					})
 					return
 				}
-				
-				uni.navigateTo({
-					url:"/pages/pay/pay"
-				})
+
+				this.addCar(true)
+
+				// uni.navigateTo({
+				// 	url: "/pages/pay/pay"
+				// })
 			},
-			
+
 			goBack() {
 				uni.navigateBack({
 					delta: 1 //返回上一级
@@ -186,18 +238,18 @@
 			height: 80rpx;
 			background: white;
 			text-align: center;
-			line-height: 80rpx;
+			// line-height: 80rpx;
 
-			image {
-				width: 30rpx;
-				height: 30rpx;
-			}
+			// image {
+			// 	width: 30rpx;
+			// 	height: 30rpx;
+			// }
 
-			.go-back {
-				position: absolute;
-				top: 0;
-				left: 30rpx;
-			}
+			// .go-back {
+			// 	position: absolute;
+			// 	top: 0;
+			// 	left: 30rpx;
+			// }
 		}
 
 		.detail-img {
