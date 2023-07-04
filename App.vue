@@ -12,7 +12,8 @@
 	}
 </script>
 
-<style>
+<style lang="scss">
 	page{
 		background: #f6f6f6	}
+	@import "@/uni_modules/uview-ui/index.scss";
 </style>
