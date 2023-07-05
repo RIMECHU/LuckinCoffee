@@ -18,7 +18,7 @@
 			</view>
 
 			<view class="choose-all">
-				<view class="choose-category">
+				<view class="choose-category" @click="toUserMsg()">
 					<view>个人资料</view>
 					<uni-icons type="forward" size="18" color="#646566"></uni-icons>
 				</view>
@@ -49,7 +49,11 @@
 			}
 		},
 		methods: {
-
+			toUserMsg(){
+				uni.navigateTo({
+					url:"/pages/UserMsg/UserMsg"
+				})
+			}
 		}
 	}
 </script>
