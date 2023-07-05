@@ -11,11 +11,11 @@
 				<uni-icons type="forward" size="18" color="#646566"></uni-icons>
 			</view>
 			<view class="user-msg">
-				<text class="username">RIM</text>
-				<text class="phone">17688272891</text>
-				<text class="default">默认</text>
+				<text class="username">{{name}}</text>
+				<text class="phone">{{phone}}</text>
+				<text class="default" v-if="isDefault">默认</text>
 			</view>
-			<view class="user-address">广东省佛山市南海区西樵镇</view>
+			<view class="user-address">{{joinAddress}}</view>
 		</view>
 
 		<view class="order-msg">
@@ -49,7 +49,7 @@
 		</view>
 
 		<view class="btn-buy">
-			<view class="btn">立即结算</view>
+			<view class="btn" @click="pay">立即结算</view>
 		</view>
 
 		<uni-popup ref="popup" type="bottom" background-color="#fff">
@@ -58,22 +58,27 @@
 					<text>选择地址</text>
 					<uni-icons type="closeempty" size="18" color="#646566"></uni-icons>
 				</view>
-				
-				<view class="address">
-					<u-checkbox-group>
-						<u-checkbox v-model="checked" shape="circle" size="16"></u-checkbox>
-					</u-checkbox-group>
-					
-					<view class="address-msg">
-						<view class="user">
-							<text>RIM</text>
-							<text class="phone">17688272891</text>
-							<text class="default">默认</text>
+
+				<view class="ad-fram">
+					<view class="address" @click="changeAddress(index)" v-for="(item,index) in addressArr"
+						:key="item.aid">
+						<u-checkbox-group>
+							<u-checkbox @change="changeAddress(index)" :checked="item.hook" shape="circle"
+								size="16"></u-checkbox>
+						</u-checkbox-group>
+
+						<view class="address-msg">
+							<view class="user">
+								<text>{{item.name}}</text>
+								<text class="phone">{{item.tel}}</text>
+								<text class="default" v-if="item.isDefault==1">默认</text>
+							</view>
+							<view class="msg">{{item.province}}{{item.city}}{{item.county}}{{item.addressDetail}}</view>
 						</view>
-						<view class="msg">广东省佛山市南海区</view>
 					</view>
 				</view>
-				
+
+
 				<view class="add-address">新增地址</view>
 			</view>
 		</uni-popup>
@@ -89,7 +94,13 @@
 				orderProduct: [],
 				time: "",
 				allCount: 0,
-				allPrice: 0
+				allPrice: 0,
+
+				addressArr: [],
+				joinAddress: "",
+				name: "",
+				phone: "",
+				isDefault: false
 			}
 		},
 
@@ -103,6 +114,7 @@
 			this.token = uni.getStorageSync('token')
 			this.getPayProduct();
 			// console.log("this.token",this.token)
+			this.getAddress();
 
 			let date = new Date()
 
@@ -118,6 +130,108 @@
 		},
 
 		methods: {
+			pay() {
+				if (this.name.length == 0) {
+					return
+					uni.showToast({
+						title: "请选择地址",
+						icon: "error"
+					})
+				}
+
+				uni.request({
+					url: "http://www.kangliuyong.com:10002/pay",
+					method: "POST",
+					data: {
+						appkey: 'U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=',
+						tokenString: this.token,
+						sids: this.sids,
+						phone: this.phone,
+						address: this.joinAddress,
+						receiver: this.name
+					},
+					header: {
+						'content-type': 'application/x-www-form-urlencoded;charset=utf-8' // 默认值
+					},
+					success: (res) => {
+						console.log('res', res)
+
+						if (res.data.code == 60000) {
+							uni.redirectTo({
+								url: "/pages/order/order"
+							})
+						} else {
+							uni.showToast({
+								title: "支付失败",
+								icon: "error"
+							})
+						}
+					},
+					fail: (err) => {
+						console.log('err', err)
+					},
+				})
+			},
+
+			changeAddress(index) {
+				this.addressArr = this.addressArr.map((item, count) => {
+
+					item.hook = false
+
+					if (index == count) {
+						item.hook = true,
+
+							this.joinAddress = item.province + item.city + item.county + item.addressDetail
+						this.name = item.name
+						this.phone = item.tel
+						this.isDefault = true
+					}
+
+					return item
+				})
+			},
+
+			getAddress() {
+				if (!this.token) {
+					uni.navigateTo({
+						url: "/pages/login/login"
+					})
+					return
+				}
+
+				uni.request({
+					url: "http://www.kangliuyong.com:10002/findAddress",
+					data: {
+						appkey: 'U2FsdGVkX19WSQ59Cg+Fj9jNZPxRC5y0xB1iV06BeNA=',
+						tokenString: this.token,
+					},
+					success: (res) => {
+						console.log("res", res)
+
+						this.addressArr = res.data.result.map(item => {
+
+							item.hook = false
+
+							if (item.isDefault == 1) {
+								item.hook = true,
+
+									this.joinAddress = item.province + item.city + item.county + item
+									.addressDetail
+								this.name = item.name
+								this.phone = item.tel
+								this.isDefault = true
+							}
+
+							return item
+						})
+
+					},
+					fail: (err) => {
+						console.log("err", err)
+					}
+				})
+			},
+
 			open() {
 				// 通过组件定义的ref调用uni-popup方法 ,如果传入参数 ，type 属性将失效 ，仅支持 ['top','left','bottom','right','center']
 				this.$refs.popup.open()
@@ -205,11 +319,11 @@
 				}
 
 				.default {
-					height: 50rpx;
+					height: 40rpx;
 					background: #0c34ba;
 					color: white;
 					padding: 0 15rpx;
-					line-height: 46rpx;
+					line-height: 40rpx;
 					border-radius: 30rpx;
 					font-size: 24rpx;
 				}
@@ -316,8 +430,6 @@
 					}
 				}
 			}
-
-
 		}
 
 		.btn-buy {
@@ -338,48 +450,55 @@
 				border-radius: 50rpx;
 			}
 		}
-		
-		.content{
+
+		.content {
 			padding: 10rpx 20rpx 10rpx 20rpx;
-			
-			.nav-bottom{
+
+			.nav-bottom {
 				display: flex;
 				align-items: center;
 				justify-content: space-between;
 				margin: 10rpx 0;
 			}
-			
-			.add-address{
+
+			.ad-fram {
+				height: 400rpx;
+				//滚动条
+				overflow: scroll;
+			}
+
+			.add-address {
 				margin: 10rpx 30rpx;
-				height: 75rpx;
+				height: 80rpx;
 				background: #0c34ba;
 				color: white;
 				text-align: center;
-				line-height: 75rpx;
+				line-height: 80rpx;
 				border-radius: 50rpx;
+				margin-bottom: 20rpx;
 			}
-			
-			.address{
+
+			.address {
 				padding: 30rpx 0;
 				margin-bottom: 40rpx;
 				display: flex;
 				border-bottom: 1rpx solid #e8e8e8;
 				color: #323233;
-				
-				.address-msg{
+
+				.address-msg {
 					margin-left: 20rpx;
 				}
-				
-				.msg{
+
+				.msg {
 					margin-top: 20rpx;
 					font-size: 26rpx;
 				}
-				
-				.phone{
+
+				.phone {
 					margin: 0 20rpx;
 				}
-				
-				.default{
+
+				.default {
 					display: inline-block;
 					height: 46rpx;
 					background: #0c34ba;
